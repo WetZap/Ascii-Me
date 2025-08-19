@@ -1,0 +1,8 @@
+Pillow
+argparse
+PIL
+glob
+shutil
+time
+os
+sys
