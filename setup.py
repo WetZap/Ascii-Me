@@ -9,7 +9,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "ascii-art=ascii-me:main"
+            "ascii-art=ascii_art:main"
         ]
     },
     python_requires=">=3.7",
