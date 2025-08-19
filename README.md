@@ -13,3 +13,9 @@ Clona el repositorio e instala con `pip`:
 git clone https://github.com/WetZap/Ascii-Me.git
 cd Ascii-Me
 pip install .
+
+## 🚀 Instalación desde PyPI
+
+```bash
+pip install ascii-me-cli
+
