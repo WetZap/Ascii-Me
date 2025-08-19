@@ -1,8 +1,1 @@
-Pillow
-argparse
-PIL
-glob
-shutil
-time
-os
-sys
+Pillow>=9.0.0
