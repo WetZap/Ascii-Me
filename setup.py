@@ -9,8 +9,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "ascii-art=ascii_art:main"
-        ]
+        "ascii-art=ascii_art.__main__:main"        ]
     },
     python_requires=">=3.7",
     author="WetZap",
