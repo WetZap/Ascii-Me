@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="ascii-me-cli",
-    version="0.1.3",
+    version="0.1.4",
     packages=['ascii_art'],  # Explicit package name
     install_requires=[
         "Pillow>=9.0.0"
