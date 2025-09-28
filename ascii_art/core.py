@@ -1,8 +1,9 @@
+import glob
 import os
-import time
 import shutil
 import sys
-import glob
+import time
+
 from PIL import Image, ImageSequence
 
 ASCII_CHARS = " .'`^\",:;Il!i><~+_-?][}{1234567890)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"

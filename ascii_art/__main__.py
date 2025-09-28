@@ -1,6 +1,13 @@
 import argparse
 import os
-from ascii_art.core import gif_to_ascii_frames, play_ascii_animation, image_to_ascii, find_file_by_mode
+
+from ascii_art.core import (
+    find_file_by_mode,
+    gif_to_ascii_frames,
+    image_to_ascii,
+    play_ascii_animation,
+)
+
 
 def main():
     parser = argparse.ArgumentParser()

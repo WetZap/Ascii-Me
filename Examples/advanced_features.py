@@ -1,11 +1,14 @@
 """Ejemplos avanzados de ASCII-Me."""
 
-from ascii_me import ASCIIConverter, ImageProcessor, GIFHandler
-from ascii_me.utils import FileValidator, setup_logging
-from PIL import Image, ImageDraw, ImageFont
-import tempfile
 import os
+import tempfile
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+from ascii_me import ASCIIConverter, GIFHandler, ImageProcessor
+from ascii_me.utils import FileValidator, setup_logging
+
 
 def ejemplo_validacion_archivos():
     """Ejemplo de validación de archivos."""
@@ -192,7 +195,7 @@ def ejemplo_rendimiento():
     print("=== Optimización de Rendimiento ===")
     
     import time
-    
+
     # Crear imagen grande
     large_img = Image.new('RGB', (800, 600))
     draw = ImageDraw.Draw(large_img)

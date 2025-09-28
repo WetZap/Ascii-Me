@@ -1,13 +1,14 @@
 """Tests para el módulo GIF handler."""
 
-import pytest
-from pathlib import Path
-from PIL import Image
 import tempfile
 import time
+from pathlib import Path
 
-from ascii_me.gif_handler import GIFHandler
+import pytest
+from PIL import Image
+
 from ascii_me.ascii_converter import ASCIIConverter
+from ascii_me.gif_handler import GIFHandler
 from ascii_me.utils import ValidationError
 
 

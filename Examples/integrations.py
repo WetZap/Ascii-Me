@@ -2,19 +2,22 @@
 
 import asyncio
 import json
-import subprocess
-from pathlib import Path
-from ascii_me import ASCIIConverter, ImageProcessor
-from PIL import Image
-import tempfile
 import os
+import subprocess
+import tempfile
+from pathlib import Path
+
+from PIL import Image
+
+from ascii_me import ASCIIConverter, ImageProcessor
+
 
 def integracion_flask():
     """Ejemplo de integración con Flask web server."""
     print("=== Integración con Flask ===")
     
     try:
-        from flask import Flask, request, jsonify, render_template_string
+        from flask import Flask, jsonify, render_template_string, request
         
         app = Flask(__name__)
         
@@ -100,9 +103,10 @@ def integracion_api_rest():
     print("=== API REST con ASCII-Me ===")
     
     try:
-        from flask import Flask, request, jsonify
         import base64
         from io import BytesIO
+
+        from flask import Flask, jsonify, request
         
         app = Flask(__name__)
         

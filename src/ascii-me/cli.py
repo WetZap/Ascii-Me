@@ -6,22 +6,22 @@ from pathlib import Path
 from typing import Optional
 
 import click
+from rich import print as rprint
 from rich.console import Console
+from rich.panel import Panel
 from rich.progress import (
+    BarColumn,
     Progress,
     SpinnerColumn,
-    TextColumn,
-    BarColumn,
     TaskProgressColumn,
+    TextColumn,
 )
-from rich.panel import Panel
-from rich.text import Text
 from rich.table import Table
-from rich import print as rprint
+from rich.text import Text
 
 from .ascii_converter import ASCIIConverter
-from .image_processor import ImageProcessor, ProcessingError
 from .gif_handler import GIFHandler
+from .image_processor import ImageProcessor, ProcessingError
 from .utils import FileValidator, ValidationError, setup_logging
 
 console = Console()
@@ -278,7 +278,7 @@ def export_frames(file_path, output_dir):
 @main.command()
 def info():
     """Muestra información sobre ASCII-Me."""
-    from . import __version__, __author__, __description__
+    from . import __author__, __description__, __version__
 
     info_table = Table(title="ℹ️  Información de ASCII-Me", show_header=False)
     info_table.add_column("Campo", style="cyan", no_wrap=True)

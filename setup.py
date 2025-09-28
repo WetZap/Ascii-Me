@@ -1,7 +1,8 @@
 """Setup script para ASCII-Me."""
 
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import find_packages, setup
 
 # Leer README
 this_directory = Path(__file__).parent

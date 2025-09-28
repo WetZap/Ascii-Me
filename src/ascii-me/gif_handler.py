@@ -1,14 +1,15 @@
 """Manejo optimizado de GIFs animados."""
 
 import logging
-import time
 import os
+import time
 from pathlib import Path
 from typing import Generator, List, Optional, Union
+
 from PIL import Image
 
-from .utils import FileValidator, ValidationError
 from .ascii_converter import ASCIIConverter
+from .utils import FileValidator, ValidationError
 
 logger = logging.getLogger(__name__)
 

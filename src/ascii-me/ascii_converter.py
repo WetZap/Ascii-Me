@@ -2,8 +2,9 @@
 
 import logging
 from typing import Optional, Tuple
-from PIL import Image
+
 import numpy as np
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 

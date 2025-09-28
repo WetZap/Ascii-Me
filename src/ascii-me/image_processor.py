@@ -3,11 +3,12 @@
 import logging
 from pathlib import Path
 from typing import Optional, Union
-from PIL import Image, ImageOps
-import numpy as np
 
-from .utils import FileValidator, ValidationError
+import numpy as np
+from PIL import Image, ImageOps
+
 from .ascii_converter import ASCIIConverter
+from .utils import FileValidator, ValidationError
 
 logger = logging.getLogger(__name__)
 

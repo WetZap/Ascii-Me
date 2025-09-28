@@ -1,9 +1,12 @@
 """Ejemplos básicos de uso de ASCII-Me."""
 
-from ascii_me import ASCIIConverter, ImageProcessor, GIFHandler
-from PIL import Image
-import tempfile
 import os
+import tempfile
+
+from PIL import Image
+
+from ascii_me import ASCIIConverter, GIFHandler, ImageProcessor
+
 
 def ejemplo_conversion_basica():
     """Ejemplo de conversión básica de imagen."""
