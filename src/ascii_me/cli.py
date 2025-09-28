@@ -1,9 +1,9 @@
-"""Interfaz de línea de comandos mejorada para ASCII-Me."""
+""" "Interfaz de línea de comandos mejorada para ASCII-Me."""
 
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional
 
 import click
 from rich.console import Console
@@ -57,10 +57,19 @@ class CLIError(Exception):
 @click.option("--verbose", "-v", is_flag=True, help="Modo verboso")
 @click.pass_context
 def main(
-    ctx, mode, file_path, width, height, charset, no_color, remove_bg, output, verbose
-):
+    ctx: click.Context,
+    mode: str,
+    file_path: Optional[str],
+    width: int,
+    height: Optional[int],
+    charset: str,
+    no_color: bool,
+    remove_bg: bool,
+    output: Optional[str],
+    verbose: bool,
+) -> None:
     """🎨 ASCII-Me: Convierte imágenes y GIFs a arte ASCII colorido."""
-    return None
+
     # Configurar logging
     log_level = "DEBUG" if verbose else "INFO"
     setup_logging(log_level)
@@ -72,14 +81,14 @@ def main(
         try:
             # Auto-detectar archivo si no se proporciona
             if not file_path:
-                file_path = auto_detect_file(mode)
-                if not file_path:
+                detected_file = auto_detect_file(mode)
+                if not detected_file:
                     console.print(
-                        "[red]❌ No se encontró ningún archivo válido en "
-                        "el directorio actual[/red]"
+                        "[red]❌ No se encontró ningún archivo válido en el directorio actual[/red]"
                     )
                     show_usage_help()
                     sys.exit(1)
+                file_path = detected_file
 
             # Determinar modo automáticamente si es necesario
             if mode == "auto":
@@ -108,7 +117,7 @@ def main(
             sys.exit(1)
 
 
-def show_banner():
+def show_banner() -> None:
     """Muestra el banner de ASCII-Me."""
     banner_text = Text()
     banner_text.append("🎨 ", style="bright_blue")
@@ -123,10 +132,8 @@ def show_banner():
 
     console.print(panel)
 
-    return None
 
-
-def show_usage_help():
+def show_usage_help() -> None:
     """Muestra ayuda básica de uso."""
     table = Table(title="🚀 Ejemplos de Uso", show_header=False, border_style="dim")
 
@@ -140,7 +147,6 @@ def show_usage_help():
     table.add_row("ascii-art --output resultado.txt", "Guardar en archivo")
 
     console.print(table)
-    return None
 
 
 def auto_detect_file(preferred_mode: str) -> Optional[str]:
@@ -161,12 +167,10 @@ def detect_file_type(file_path: str) -> str:
     extension = Path(file_path).suffix.lower()
     return "gif" if extension == ".gif" else "image"
 
-    return None
-
 
 def process_image_cli(
     file_path: str, converter: ASCIIConverter, remove_bg: bool, output: Optional[str]
-):
+) -> None:
     """Procesa una imagen desde CLI."""
     processor = ImageProcessor(converter)
 
@@ -201,10 +205,11 @@ def process_image_cli(
         except Exception as e:
             progress.update(task, advance=100)
             raise ProcessingError(f"Error procesando imagen: {e}")
-    return None
 
 
-def process_gif_cli(file_path: str, converter: ASCIIConverter, output: Optional[str]):
+def process_gif_cli(
+    file_path: str, converter: ASCIIConverter, output: Optional[str]
+) -> None:
     """Procesa un GIF desde CLI."""
     handler = GIFHandler(converter)
 
@@ -225,8 +230,8 @@ def process_gif_cli(file_path: str, converter: ASCIIConverter, output: Optional[
             table.add_column("Frame", style="cyan")
             table.add_column("Archivo", style="white")
 
-            for i, file_path in enumerate(created_files[:5]):  # Mostrar primeros 5
-                table.add_row(f"Frame {i}", file_path.name)
+            for i, file_path_obj in enumerate(created_files[:5]):  # Mostrar primeros 5
+                table.add_row(f"Frame {i}", file_path_obj.name)
 
             if len(created_files) > 5:
                 table.add_row("...", f"... y {len(created_files) - 5} más")
@@ -243,10 +248,9 @@ def process_gif_cli(file_path: str, converter: ASCIIConverter, output: Optional[
             handler.play_gif_ascii(file_path, loop=True, max_loops=3)
         except KeyboardInterrupt:
             console.print("\n[green]✅ Reproducción detenida[/green]")
-    return None
 
 
-def save_ascii_result(ascii_content: str, output_path: str):
+def save_ascii_result(ascii_content: str, output_path: str) -> None:
     """Guarda el resultado ASCII en un archivo."""
     try:
         output_file = Path(output_path)
@@ -258,8 +262,6 @@ def save_ascii_result(ascii_content: str, output_path: str):
     except Exception as e:
         raise CLIError(f"Error guardando archivo: {e}")
 
-    return None
-
 
 # Comandos adicionales
 @main.command()
@@ -267,7 +269,7 @@ def save_ascii_result(ascii_content: str, output_path: str):
 @click.option(
     "--output-dir", "-o", default="./ascii_frames", help="Directorio de salida"
 )
-def export_frames(file_path, output_dir):
+def export_frames(file_path: str, output_dir: str) -> None:
     """Exporta todos los frames de un GIF como archivos de texto."""
     try:
         handler = GIFHandler()
@@ -285,7 +287,7 @@ def export_frames(file_path, output_dir):
 
 
 @main.command()
-def info():
+def info() -> None:
     """Muestra información sobre ASCII-Me."""
     from . import __author__, __description__, __version__
 
@@ -300,24 +302,18 @@ def info():
     info_table.add_row("Conjuntos de caracteres", "simple, extended, blocks")
 
     console.print(info_table)
-    return None
 
 
 @main.command()
 @click.argument("directory", type=click.Path(exists=True), default=".")
-def scan(directory):
+def scan(directory: str) -> None:
     """Escanea un directorio en busca de archivos compatibles."""
     dir_path = Path(directory)
 
     with console.status(f"[bold green]🔍 Escaneando {dir_path}..."):
-        images = (
-            list(dir_path.glob("*.jpg"))
-            + list(dir_path.glob("*.jpeg"))
-            + list(dir_path.glob("*.png"))
-            + list(dir_path.glob("*.bmp"))
-            + list(dir_path.glob("*.tiff"))
-            + list(dir_path.glob("*.webp"))
-        )
+        images: List[Path] = []
+        for pattern in ["*.jpg", "*.jpeg", "*.png", "*.bmp", "*.tiff", "*.webp"]:
+            images.extend(dir_path.glob(pattern))
 
         gifs = list(dir_path.glob("*.gif"))
 
@@ -368,7 +364,6 @@ def scan(directory):
                 gif_table.add_row(gif.name, "Error")
 
         console.print(gif_table)
-    return None
 
 
 if __name__ == "__main__":
