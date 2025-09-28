@@ -1,6 +1,5 @@
 """Tests para el módulo utils."""
 
-
 import pytest
 from PIL import Image
 

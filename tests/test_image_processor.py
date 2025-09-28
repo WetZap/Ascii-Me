@@ -1,6 +1,5 @@
 """Tests para el módulo image processor."""
 
-
 import pytest
 from PIL import Image
 
