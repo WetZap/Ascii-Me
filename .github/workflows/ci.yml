@@ -1,0 +1,214 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  release:
+    types: [published]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Lint and Format Check
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install black flake8 isort mypy
+
+      - name: Check formatting with Black
+        run: black --check src tests
+
+      - name: Check import sorting with isort
+        run: isort --check-only src tests
+
+      - name: Lint with flake8
+        run: flake8 src tests --max-line-length=88 --extend-ignore=E203,W503
+
+      - name: Type check with mypy
+        run: mypy src
+
+  test:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          # Excluir algunas combinaciones para acelerar
+          - os: windows-latest
+            python-version: "3.8"
+          - os: macos-latest
+            python-version: "3.8"
+
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+
+      - name: Run tests
+        run: |
+          pytest --cov=src/ascii_me --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+  integration-test:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Integration Tests
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Create test files
+        run: |
+          # Crear imagen de prueba
+          python -c "
+          from PIL import Image
+          img = Image.new('RGB', (100, 100), color='red')
+          img.save('test_image.png')
+
+          # Crear GIF de prueba
+          frames = []
+          for i in range(3):
+              frame = Image.new('RGB', (50, 50), color=['red', 'green', 'blue'][i])
+              frames.append(frame)
+          frames[0].save('test_gif.gif', save_all=True, append_images=frames[1:], duration=100)
+          "
+
+      - name: Test CLI commands
+        run: |
+          # Test imagen
+          ascii-art --file test_image.png --width 40 --no-color --output result.txt
+
+          # Verificar que se creó el archivo
+          test -f result.txt
+
+          # Test GIF
+          ascii-art --mode gif --file test_gif.gif export-frames --output-dir gif_frames
+
+          # Verificar que se crearon frames
+          test -d gif_frames
+
+          # Test scan command
+          ascii-art scan .
+
+          # Test info command
+          ascii-art info
+
+  security:
+    runs-on: ubuntu-latest
+    name: Security Scan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install bandit
+        run: pip install bandit[toml]
+
+      - name: Run security scan
+        run: bandit -r src/ -f json -o bandit-report.json
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    name: Build Package
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      - name: Build package
+        run: python -m build
+
+      - name: Check package
+        run: twine check dist/*
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: [build, integration-test, security]
+    runs-on: ubuntu-latest
+    name: Publish to PyPI
+    if: github.event_name == 'release' && github.event.action == 'published'
+
+    environment:
+      name: pypi
+      url: https://pypi.org/p/ascii-me-cli
+
+    permissions:
+      id-token: write # Para PyPI trusted publishing
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

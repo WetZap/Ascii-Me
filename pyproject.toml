@@ -1,0 +1,198 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ascii-me-cli"
+dynamic = ["version", "description"]
+authors = [
+    {name = "WetZap", email = "wetzap@example.com"},
+]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Artistic Software",
+    "Topic :: Terminals",
+    "Environment :: Console",
+]
+keywords = ["ascii", "art", "image", "gif", "converter", "terminal", "cli"]
+dependencies = [
+    "Pillow>=10.0.0",
+    "rich>=13.0.0",
+    "click>=8.1.0",
+    "numpy>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+    "tox>=4.0.0",
+]
+advanced = [
+    "rembg>=2.0.0",
+    "opencv-python>=4.8.0",
+]
+all = [
+    "ascii-me-cli[dev,advanced]"
+]
+
+[project.urls]
+Homepage = "https://github.com/WetZap/Ascii-Me"
+Documentation = "https://github.com/WetZap/Ascii-Me#readme"
+Repository = "https://github.com/WetZap/Ascii-Me.git"
+"Bug Reports" = "https://github.com/WetZap/Ascii-Me/issues"
+Changelog = "https://github.com/WetZap/Ascii-Me/blob/main/CHANGELOG.md"
+
+[project.scripts]
+ascii-art = "ascii_me.cli:main"
+ascii-me = "ascii_me.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = {attr = "ascii_me.__version__"}
+description = {attr = "ascii_me.__description__"}
+
+# Configuración de Black
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# Configuración de isort
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["ascii_me"]
+
+# Configuración de mypy
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["PIL.*", "numpy.*", "rich.*"]
+ignore_missing_imports = true
+
+# Configuración de pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--verbose",
+    "--cov=src/ascii_me",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Configuración de coverage
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# Configuración de tox
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+isolated_build = true
+envlist = py38,py39,py310,py311,py312,lint,type
+
+[testenv]
+deps = 
+    pytest>=7.4.0
+    pytest-cov>=4.1.0
+commands = pytest {posargs}
+
+[testenv:lint]
+deps = 
+    black>=23.0.0
+    flake8>=6.0.0
+    isort>=5.12.0
+commands = 
+    black --check src tests
+    isort --check-only src tests
+    flake8 src tests
+
+[testenv:type]
+deps = mypy>=1.5.0
+commands = mypy src
+
+[testenv:format]
+deps = 
+    black>=23.0.0
+    isort>=5.12.0
+commands = 
+    black src tests
+    isort src tests
+"""

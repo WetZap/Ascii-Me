@@ -1,0 +1,94 @@
+.PHONY: help test lint format docs clean build install dev-install
+
+# Variables
+PYTHON := python
+PIP := pip
+PROJECT_NAME := ascii-me-cli
+
+help: ## Mostrar esta ayuda
+	@echo "Comandos disponibles:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+test: ## Ejecutar todos los tests
+	$(PYTHON) -m pytest tests/ -v --cov=src/ascii_me --cov-report=html --cov-report=term-missing
+
+test-fast: ## Ejecutar tests rápidos (sin tests marcados como slow)
+	$(PYTHON) -m pytest tests/ -v -m "not slow"
+
+test-integration: ## Ejecutar solo tests de integración
+	$(PYTHON) -m pytest tests/ -v -m "integration"
+
+lint: ## Verificar código con linters
+	black --check src tests
+	isort --check-only src tests
+	flake8 src tests --max-line-length=88 --extend-ignore=E203,W503
+	mypy src
+
+format: ## Formatear código automáticamente
+	black src tests
+	isort src tests
+
+docs: ## Generar documentación
+	@echo "Generando documentación..."
+	@mkdir -p docs
+	@echo "# ASCII-Me Documentation" > docs/index.md
+	@echo "Documentación generada en docs/"
+
+clean: ## Limpiar archivos temporales
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info/
+	rm -rf .pytest_cache/
+	rm -rf .coverage
+	rm -rf htmlcov/
+	rm -rf .mypy_cache/
+	rm -rf .tox/
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+
+build: clean ## Construir paquete
+	$(PYTHON) -m build
+
+install: ## Instalar paquete
+	$(PIP) install .
+
+dev-install: ## Instalar en modo desarrollo
+	$(PIP) install -e .[dev]
+
+publish-test: build ## Publicar en TestPyPI
+	$(PYTHON) -m twine upload --repository testpypi dist/*
+
+publish: build ## Publicar en PyPI
+	$(PYTHON) -m twine upload dist/*
+
+security: ## Ejecutar análisis de seguridad
+	bandit -r src/ -f json -o bandit-report.json
+
+pre-commit: ## Ejecutar pre-commit hooks
+	pre-commit run --all-files
+
+setup-dev: ## Configurar entorno de desarrollo
+	@bash scripts/setup_dev.sh
+
+requirements: ## Actualizar requirements.txt
+	pip-compile requirements.in
+	pip-compile requirements-dev.in
+
+tox: ## Ejecutar tests en múltiples versiones de Python
+	tox
+
+all: lint test build ## Ejecutar lint, test y build
+
+# Comandos para desarrollo rápido
+quick-test: ## Test rápido para desarrollo
+	$(PYTHON) -m pytest tests/test_ascii_converter.py -v
+
+demo: ## Ejecutar demo con imagen de ejemplo
+	@echo "Creando imagen de ejemplo..."
+	@$(PYTHON) -c "from PIL import Image; img = Image.new('RGB', (200, 100), 'red'); img.save('demo.png')"
+	@echo "Convirtiendo a ASCII..."
+	@ascii-art --file demo.png --width 60
+	@rm -f demo.png
+
+version: ## Mostrar versión actual
+	@$(PYTHON) -c "from src.ascii_me import __version__; print(__version__)"
