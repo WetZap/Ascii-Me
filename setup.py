@@ -1,5 +1,6 @@
 """Setup script para ASCII-Me."""
 
+import re
 from pathlib import Path
 
 from setuptools import find_packages, setup
@@ -8,17 +9,49 @@ from setuptools import find_packages, setup
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text(encoding='utf-8')
 
-# Leer versión
-version = {}
-with open("src/ascii_me/__init__.py") as fp:
-    exec(fp.read(), version)
+# Leer versión de manera más robusta
+def get_version():
+    """Extrae versión del __init__.py sin ejecutar el código."""
+    version_file = Path("src/ascii_me/__init__.py")
+    version_text = version_file.read_text(encoding='utf-8')
+    
+    # Buscar __version__ = "..."
+    version_match = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', 
+                              version_text, re.MULTILINE)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+def get_description():
+    """Extrae descripción del __init__.py sin ejecutar el código."""
+    version_file = Path("src/ascii_me/__init__.py")
+    version_text = version_file.read_text(encoding='utf-8')
+    
+    # Buscar __description__ = "..."
+    desc_match = re.search(r'^__description__\s*=\s*[\'"]([^\'"]*)[\'"]', 
+                           version_text, re.MULTILINE)
+    if desc_match:
+        return desc_match.group(1)
+    return "Convierte imágenes y GIFs animados en arte ASCII a color"
+
+def get_author():
+    """Extrae autor del __init__.py sin ejecutar el código."""
+    version_file = Path("src/ascii_me/__init__.py")
+    version_text = version_file.read_text(encoding='utf-8')
+    
+    # Buscar __author__ = "..."
+    author_match = re.search(r'^__author__\s*=\s*[\'"]([^\'"]*)[\'"]', 
+                             version_text, re.MULTILINE)
+    if author_match:
+        return author_match.group(1)
+    return "WetZap"
 
 setup(
     name="ascii-me-cli",
-    version=version['__version__'],
-    author=version['__author__'],
+    version=get_version(),
+    author=get_author(),
     author_email="wetzap@example.com",
-    description=version['__description__'],
+    description=get_description(),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/WetZap/Ascii-Me",
@@ -63,8 +96,8 @@ setup(
             "pre-commit>=3.3.0",
         ],
         "advanced": [
-            "rembg>=2.0.0",  # Para remoción avanzada de fondo
-            "opencv-python>=4.8.0",  # Para procesamiento avanzado
+            "rembg>=2.0.0",
+            "opencv-python>=4.8.0",
         ],
     },
     entry_points={
