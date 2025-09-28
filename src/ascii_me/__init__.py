@@ -6,9 +6,6 @@ __description__ = "Convierte imágenes y GIFs animados en arte ASCII a color"
 
 # Imports principales solo si no estamos siendo ejecutados por setup.py
 try:
-    from .ascii_converter import ASCIIConverter
-    from .gif_handler import GIFHandler
-    from .image_processor import ImageProcessor
 
     __all__ = ["ASCIIConverter", "ImageProcessor", "GIFHandler"]
 
