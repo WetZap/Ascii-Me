@@ -84,7 +84,8 @@ def main(
                 detected_file = auto_detect_file(mode)
                 if not detected_file:
                     console.print(
-                        "[red]❌ No se encontró ningún archivo válido en el directorio actual[/red]"
+                        "[red]❌ No se encontró ningún archivo "
+                        "válido en el directorio actual[/red]"
                     )
                     show_usage_help()
                     sys.exit(1)
