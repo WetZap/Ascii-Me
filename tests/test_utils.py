@@ -1,7 +1,5 @@
 """Tests para el módulo utils."""
 
-import tempfile
-from pathlib import Path
 
 import pytest
 from PIL import Image

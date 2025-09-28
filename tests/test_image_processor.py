@@ -1,12 +1,11 @@
 """Tests para el módulo image processor."""
 
-from pathlib import Path
 
 import pytest
 from PIL import Image
 
 from ascii_me.ascii_converter import ASCIIConverter
-from ascii_me.image_processor import ImageProcessor, ProcessingError
+from ascii_me.image_processor import ImageProcessor
 from ascii_me.utils import ValidationError
 
 
