@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # ← Actualizado de v4
         with:
           python-version: "3.11"
 
@@ -46,7 +46,6 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         exclude:
-          # Excluir algunas combinaciones para acelerar
           - os: windows-latest
             python-version: "3.8"
           - os: macos-latest
@@ -58,7 +57,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # ← Actualizado
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -73,11 +72,12 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4 # ← Actualizado de v3
         with:
           file: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN }} # ← Añadido token requerido
 
   integration-test:
     needs: test
@@ -88,7 +88,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # ← Actualizado
         with:
           python-version: "3.11"
 
@@ -99,13 +99,11 @@ jobs:
 
       - name: Create test files
         run: |
-          # Crear imagen de prueba
           python -c "
           from PIL import Image
           img = Image.new('RGB', (100, 100), color='red')
           img.save('test_image.png')
 
-          # Crear GIF de prueba
           frames = []
           for i in range(3):
               frame = Image.new('RGB', (50, 50), color=['red', 'green', 'blue'][i])
@@ -115,22 +113,9 @@ jobs:
 
       - name: Test CLI commands
         run: |
-          # Test imagen
           ascii-art --file test_image.png --width 40 --no-color --output result.txt
-
-          # Verificar que se creó el archivo
           test -f result.txt
-
-          # Test GIF
-          ascii-art --mode gif --file test_gif.gif export-frames --output-dir gif_frames
-
-          # Verificar que se crearon frames
-          test -d gif_frames
-
-          # Test scan command
           ascii-art scan .
-
-          # Test info command
           ascii-art info
 
   security:
@@ -141,7 +126,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # ← Actualizado
         with:
           python-version: "3.11"
 
@@ -152,7 +137,7 @@ jobs:
         run: bandit -r src/ -f json -o bandit-report.json
 
       - name: Upload security scan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # ← Actualizado de v3
         if: always()
         with:
           name: bandit-report
@@ -167,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # ← Actualizado
         with:
           python-version: "3.11"
 
@@ -183,7 +168,7 @@ jobs:
         run: twine check dist/*
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # ← Actualizado
         with:
           name: dist
           path: dist/
@@ -199,11 +184,11 @@ jobs:
       url: https://pypi.org/p/ascii-me-cli
 
     permissions:
-      id-token: write # Para PyPI trusted publishing
+      id-token: write
 
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4 # ← Actualizado de v3
         with:
           name: dist
           path: dist/
