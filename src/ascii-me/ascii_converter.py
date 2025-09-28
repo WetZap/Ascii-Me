@@ -1,7 +1,7 @@
 """Módulo principal para la conversión ASCII."""
 
 import logging
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy as np
 from PIL import Image
@@ -15,7 +15,8 @@ class ASCIIConverter:
     # Paletas de caracteres ASCII ordenadas por densidad
     ASCII_CHARS = {
         "simple": " .:-=+*#%@",
-        "extended": " .`'^\",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
+        "extended": " .`'^\",:;Il!i><~+_-?][}{1)"
+        "(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",
         "blocks": " ░▒▓█",
     }
 

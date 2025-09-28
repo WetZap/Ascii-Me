@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Optional
 
 import click
-from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (
@@ -76,7 +75,8 @@ def main(
                 file_path = auto_detect_file(mode)
                 if not file_path:
                     console.print(
-                        "[red]❌ No se encontró ningún archivo válido en el directorio actual[/red]"
+                        "[red]❌ No se encontró ningún archivo válido en "
+                        "el directorio actual[/red]"
                     )
                     show_usage_help()
                     sys.exit(1)
@@ -332,7 +332,7 @@ def scan(directory):
                     else f"{size/1024/1024:.1f} MB"
                 )
                 img_table.add_row(img.name, size_str)
-            except:
+            except Exception:
                 img_table.add_row(img.name, "Error")
 
         if len(images) > 10:
@@ -354,7 +354,7 @@ def scan(directory):
                     else f"{size/1024/1024:.1f} MB"
                 )
                 gif_table.add_row(gif.name, size_str)
-            except:
+            except Exception:
                 gif_table.add_row(gif.name, "Error")
 
         console.print(gif_table)
