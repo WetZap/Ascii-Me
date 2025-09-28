@@ -81,7 +81,8 @@ class GIFHandler:
                         # Log progreso cada 10 frames
                         if processed_frames % 10 == 0:
                             logger.debug(
-                                f"Procesados {processed_frames}/{frames_to_process} frames"
+                                f"Procesados {processed_frames}/"
+                                f"{frames_to_process} frames"
                             )
 
                 except EOFError:

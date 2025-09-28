@@ -55,7 +55,8 @@ class FileValidator:
         file_size = path.stat().st_size
         if file_size > cls.MAX_FILE_SIZE:
             raise ValidationError(
-                f"Archivo muy grande: {file_size/1024/1024:.1f}MB > {cls.MAX_FILE_SIZE/1024/1024}MB"
+                f"Archivo muy grande: {file_size/1024/1024:.1f}MB > "
+                f"{cls.MAX_FILE_SIZE/1024/1024}MB"
             )
 
         # Verificar extensión

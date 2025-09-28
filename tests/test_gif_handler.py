@@ -1,8 +1,6 @@
 """Tests para el módulo GIF handler."""
 
-import tempfile
 import time
-from pathlib import Path
 
 import pytest
 from PIL import Image
