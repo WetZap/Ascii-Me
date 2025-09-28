@@ -60,7 +60,7 @@ def main(
     ctx, mode, file_path, width, height, charset, no_color, remove_bg, output, verbose
 ):
     """🎨 ASCII-Me: Convierte imágenes y GIFs a arte ASCII colorido."""
-
+    return None
     # Configurar logging
     log_level = "DEBUG" if verbose else "INFO"
     setup_logging(log_level)
@@ -123,6 +123,8 @@ def show_banner():
 
     console.print(panel)
 
+    return None
+
 
 def show_usage_help():
     """Muestra ayuda básica de uso."""
@@ -138,6 +140,7 @@ def show_usage_help():
     table.add_row("ascii-art --output resultado.txt", "Guardar en archivo")
 
     console.print(table)
+    return None
 
 
 def auto_detect_file(preferred_mode: str) -> Optional[str]:
@@ -157,6 +160,8 @@ def detect_file_type(file_path: str) -> str:
     """Detecta el tipo de archivo basado en la extensión."""
     extension = Path(file_path).suffix.lower()
     return "gif" if extension == ".gif" else "image"
+
+    return None
 
 
 def process_image_cli(
@@ -196,6 +201,7 @@ def process_image_cli(
         except Exception as e:
             progress.update(task, advance=100)
             raise ProcessingError(f"Error procesando imagen: {e}")
+    return None
 
 
 def process_gif_cli(file_path: str, converter: ASCIIConverter, output: Optional[str]):
@@ -237,6 +243,7 @@ def process_gif_cli(file_path: str, converter: ASCIIConverter, output: Optional[
             handler.play_gif_ascii(file_path, loop=True, max_loops=3)
         except KeyboardInterrupt:
             console.print("\n[green]✅ Reproducción detenida[/green]")
+    return None
 
 
 def save_ascii_result(ascii_content: str, output_path: str):
@@ -250,6 +257,8 @@ def save_ascii_result(ascii_content: str, output_path: str):
 
     except Exception as e:
         raise CLIError(f"Error guardando archivo: {e}")
+
+    return None
 
 
 # Comandos adicionales
@@ -291,6 +300,7 @@ def info():
     info_table.add_row("Conjuntos de caracteres", "simple, extended, blocks")
 
     console.print(info_table)
+    return None
 
 
 @main.command()
@@ -358,6 +368,7 @@ def scan(directory):
                 gif_table.add_row(gif.name, "Error")
 
         console.print(gif_table)
+    return None
 
 
 if __name__ == "__main__":
