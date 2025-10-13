@@ -1,6 +1,5 @@
 # 🎨 ASCII-Me
 
-[![Python](https://img.shields.io/pypi/pyversions/ascii-me-cli.svg)](https://pypi.org/project/ascii-me-cli/)  
 [![License](https://img.shields.io/github/license/WetZap/Ascii-Me)](LICENSE)  
 [![GitHub stars](https://img.shields.io/github/stars/WetZap/Ascii-Me?style=social)](https://github.com/WetZap/Ascii-Me/stargazers)  
 
