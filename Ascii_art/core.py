@@ -11,7 +11,7 @@ en arte ASCII con colores. Incluye capacidades para:
 - Escalado automático de imágenes para adaptarse al terminal
 - Múltiples estilos de caracteres ASCII
 
-Autor: [Tu nombre]
+Autor: [WetZap]
 Versión: 1.0
 Fecha: Octubre 2025
 """
@@ -21,7 +21,10 @@ import time
 import shutil
 import sys
 import glob
-from PIL import Image
+import platform
+import threading
+import signal
+from PIL import Image, ImageSequence
 
 # ==================== CONSTANTES GLOBALES ====================
 
@@ -37,40 +40,63 @@ BG_THRESHOLD = 50
 # Factor de corrección para mantener proporciones en terminales (caracteres no son cuadrados)
 ASPECT_RATIO_FACTOR = 0.48
 
+Modo = ''
+Archivo = ''
+Bg = ''
+
+
+
 # Estilo ASCII actual por defecto
-CURRENT_STYLE = "simple"
 
 # Diccionario de estilos de caracteres ASCII ordenados de oscuro a claro
 ASCII_CHARS = {
     "simple": " .:-=+*#%@",  # 10 caracteres básicos
     "extended": " .`'^\",:;Il!i><~+_-?][}{1)"
     "(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",  # ~70 caracteres
-    "ultraextended": "  `^'.,:;Il!i~+-_?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$@",  # Máxima densidad
+    "ultraextended": "  `^'.,:;Il!i~+-_?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$@",
     "blocks": " ░▒▓█",  # Caracteres de bloques Unicode
 }
 
+# Variables globales para estado actual
+
+# Gestión del tamaño de la terminal
+current_terminal_size = shutil.get_terminal_size()
+
+def get_terminal_size():
+    return shutil.get_terminal_size()
+
+
+
+def handle_resize_unix(signum, frame):
+    global current_terminal_size
+    new_size = get_terminal_size()
+    if new_size != current_terminal_size:
+        current_terminal_size = new_size
+        redraw(Modo, Archivo, Bg)
+
+def polling_windows(interval=0.5):
+    global current_terminal_size
+    while True:
+        new_size = get_terminal_size()
+        if new_size != current_terminal_size:
+            current_terminal_size = new_size
+            redraw(Modo, Archivo, Bg)
+        time.sleep(interval)
+
+def setup_resize_handler():
+    if platform.system() in ['Linux', 'Darwin']:
+        signal.signal(signal.SIGWINCH, handle_resize_unix)
+    elif platform.system() == 'Windows':
+        t = threading.Thread(target=polling_windows, daemon=True)
+        t.start()
+
+
 def set_style(style_name):
-    """
-    Establece el estilo de caracteres ASCII a utilizar para las conversiones.
-    
-    Args:
-        style_name (str): Nombre del estilo a aplicar. Opciones disponibles:
-                         - "simple": 10 caracteres básicos
-                         - "extended": ~70 caracteres para mayor detalle
-                         - "ultraextended": Máxima densidad de caracteres
-                         - "blocks": Caracteres de bloques Unicode
-    
-    Global Variables:
-        ASCIICHARS: Variable global que almacena el conjunto de caracteres actual
-    
-    Note:
-        Si el estilo no existe, se usa "simple" como respaldo por defecto.
-    """
-    global ASCIICHARS
+    global CURRENT_STYLE
     if style_name in ASCII_CHARS:
-        ASCIICHARS = ASCII_CHARS[style_name]
+        CURRENT_STYLE = style_name
     else:
-        ASCIICHARS = ASCII_CHARS["simple"]  # fallback por seguridad
+        CURRENT_STYLE = "simple"
 
 
 
@@ -90,24 +116,10 @@ def get_max_terminal_size():
     columns, lines = shutil.get_terminal_size()
     return max(1, columns), max(1, lines - 1)
 
-def scale_image(image, max_width, max_height):
-    """
-    Escala una imagen para que se ajuste al tamaño del terminal conservando proporciones.
-    
-    Args:
-        image (PIL.Image): Imagen a redimensionar
-        max_width (int): Ancho máximo permitido en caracteres
-        max_height (int): Alto máximo permitido en líneas
-    
-    Returns:
-        PIL.Image: Imagen redimensionada que cabe en los límites especificados
-    
-    Note:
-        - Aplica ASPECT_RATIO_FACTOR para compensar que los caracteres no son cuadrados
-        - Usa un algoritmo de doble pasada para optimizar el uso del espacio disponible
-        - Mantiene la relación de aspecto original de la imagen
-        - Si la imagen es más pequeña que los límites, no la agranda
-    """
+def scale_image(image, max_width=None, max_height=None):
+    if max_width is None or max_height is None:
+        ts = get_terminal_size()
+        max_width, max_height = ts.columns, ts.lines
     width, height = image.size
     
     # Primera pasada: escalar basándose en el ancho
@@ -160,39 +172,18 @@ def remove_background(image, bg_color=BG_COLOR, threshold=BG_THRESHOLD):
     return image
 
 def pixel_to_ascii_color(pixel):
-    """
-    Convierte un píxel individual en un carácter ASCII colorizado usando códigos ANSI.
-    
-    Args:
-        pixel (tuple): Tupla con valores de color del píxel:
-                      - RGB: (r, g, b) valores 0-255
-                      - RGBA: (r, g, b, a) valores 0-255, donde a es transparencia
-    
-    Returns:
-        str: Carácter ASCII con códigos de escape ANSI para color, o espacio si es transparente
-    
-    Note:
-        - Usa fórmula de luminancia estándar: 0.299*R + 0.587*G + 0.114*B
-        - Píxeles con alpha < 50 se consideran transparentes (devuelve espacio)
-        - El carácter se selecciona basándose en el brillo calculado
-        - Formato ANSI: \033[38;2;R;G;Bm{char}\033[0m para color RGB verdadero
-    """
-    # Manejar transparencia en imágenes RGBA
+    ascii_chars = ASCII_CHARS[CURRENT_STYLE]
     if len(pixel) == 4:
         r, g, b, a = pixel
-        if a < 50:  # Píxel muy transparente
+        if a < 50:
             return ' '
     else:
         r, g, b = pixel
-    
-    # Calcular brillo usando fórmula de luminancia estándar (ITU-R BT.709)
+
     brightness = 0.299 * r + 0.587 * g + 0.114 * b
-    
-    # Mapear brillo (0-255) a índice de carácter ASCII
-    char_idx = min(int(brightness * len(ASCII_CHARS) / 256), len(ASCII_CHARS) - 1)
-    char = ASCII_CHARS[char_idx]
-    
-    # Retornar carácter con color ANSI RGB verdadero
+    char_idx = min(int(brightness * len(ascii_chars) / 256), len(ascii_chars) - 1)
+    char = ascii_chars[char_idx]
+
     return f"\033[38;2;{r};{g};{b}m{char}\033[0m"
 
 def convert_to_colored_ascii(image):
@@ -238,135 +229,72 @@ def convert_to_colored_ascii(image):
     return '\n'.join(ascii_image)
 
 def gif_to_ascii_frames(gif_path, remove_bg=False):
-    """
-    Procesa un archivo GIF y convierte cada frame en ASCII colorizado para animación.
-    
-    Args:
-        gif_path (str): Ruta al archivo GIF a procesar
-        remove_bg (bool, optional): Si True, elimina el fondo de cada frame. Por defecto False
-    
-    Returns:
-        list: Lista de tuplas (ascii_frame, duration_sec) donde:
-              - ascii_frame (str): Frame convertido a ASCII colorizado
-              - duration_sec (float): Duración del frame en segundos (mínimo 0.06s)
-    
-    Note:
-        - Muestra progreso en tiempo real con colores ANSI
-        - Escala cada frame automáticamente al tamaño del terminal
-        - Preserva los tiempos originales del GIF con un mínimo de 60ms por frame
-        - Si un frame no tiene duración definida, usa FRAME_DELAY por defecto
-        - Procesa frames secuencialmente para optimizar memoria
-    """
-    from PIL import ImageSequence
-    
     ascii_frames = []
     total_duration = 0
-    
+
     with Image.open(gif_path) as im:
         frame_count = im.n_frames
+        
         print(f"\033[93mProcesando GIF: {frame_count} frames...\033[0m")
         
-        # Obtener dimensiones máximas del terminal
         max_width, max_height = get_max_terminal_size()
         print(f"\033[93mTamaño máximo disponible: {max_width}x{max_height}\033[0m")
         
-        # Procesar cada frame del GIF
-        for frame in ImageSequence.Iterator(im):
-            # Eliminar fondo si está habilitado
+        for i, frame in enumerate(ImageSequence.Iterator(im)):
             if remove_bg:
                 frame = remove_background(frame.copy())
             
-            # Escalar frame al tamaño del terminal
             scaled_frame = scale_image(frame, max_width, max_height)
+
+            # Mensaje de progreso que sobreescribe la misma línea
+            print(f"\033[93mProcesando frame {i+1}/{frame_count}: {scaled_frame.width}x{scaled_frame.height}\033[0m", end='\r')
             
-            # Mostrar progreso (se sobrescribe en la misma línea)
-            print(f"\033[93mFrame {len(ascii_frames)+1}/{frame_count}: "
-                  f"{scaled_frame.width}x{scaled_frame.height}\033[0m", end='\r')
-            
-            # Convertir frame a ASCII colorizado
             ascii_frame = convert_to_colored_ascii(scaled_frame)
             
-            # Obtener duración del frame (con respaldo por defecto)
             duration_ms = frame.info.get('duration', int(FRAME_DELAY * 1000))
-            duration_sec = max(duration_ms / 1000.0, 0.06)  # Mínimo 60ms por frame
-            total_duration += duration_sec
+            duration_sec = max(duration_ms / 1000.0, 0.06)  # mínimo 60ms
             
-            # Almacenar frame y su duración
+            total_duration += duration_sec
             ascii_frames.append((ascii_frame, duration_sec))
+        
+        print("\n\033[92mProcesamiento completado\033[0m")
+        print(f"\033[92mDuración total: {total_duration:.2f} segundos\033[0m")
     
-    print("\n\033[92mProcesamiento completado\033[0m")
-    print(f"\033[92mDuración total: {total_duration:.2f} segundos\033[0m")
     return ascii_frames
 
+
 def play_ascii_animation(frames):
-    """
-    Reproduce una animación ASCII en el terminal con timing preciso y bucle infinito.
-    
-    Args:
-        frames (list): Lista de tuplas (ascii_frame, duration_sec) obtenida de gif_to_ascii_frames()
-    
-    Note:
-        - Oculta el cursor durante la reproducción para mejor experiencia visual
-        - Usa timing de alta precisión con time.perf_counter() para frames suaves
-        - Limpia la pantalla al inicio y posiciona cursor en (0,0) para cada frame
-        - Bucle infinito hasta que el usuario presione Ctrl+C
-        - Restaura cursor y limpia pantalla al salir, tanto normal como por interrupción
-        - Compatible con Windows (cls) y Unix (clear) para limpiar pantalla inicial
-        
-    Control:
-        - Ctrl+C: Detener animación y salir
-        
-    Códigos ANSI utilizados:
-        - \033[?25l: Ocultar cursor
-        - \033[?25h: Mostrar cursor  
-        - \033[0;0H: Mover cursor a posición (0,0)
-        - \033[0m: Resetear colores
-        - \033[2J: Limpiar pantalla
-        - \033[H: Cursor a inicio
-    """
+
+    print("POLLA")
     try:
-        # Ocultar cursor para mejor presentación visual
-        print("\033[?25l", end='')
-        
-        # Limpiar pantalla inicial (compatible Windows/Unix)
-        os.system('cls' if os.name == 'nt' else 'clear')
-        
-        # Verificar que hay frames para reproducir
+        sys.stdout.write("\033[?25l")
+        sys.stdout.flush()
+
         if not frames:
+            print("No hay frames para mostrar")
             return
-        
-        # Código ANSI para mover cursor al inicio (0,0)
+
         escape_home = "\033[0;0H"
-        
-        # Inicializar timing de alta precisión
         start_time = time.perf_counter()
-        t = 0  # Tiempo acumulado de la animación
-        
-        # Bucle infinito de animación
+        elapsed = 0
+
         while True:
-            for frame, duration in frames:
-                # Calcular tiempo objetivo para este frame
-                target_time = start_time + t
-                
-                # Espera activa de alta precisión (mejor que sleep largo)
+            for idx, (frame, duration) in enumerate(frames):
+                print(f"Mostrando frame {idx+1}/{len(frames)}", end='\r')
+                target_time = start_time + elapsed
                 while time.perf_counter() < target_time:
-                    time.sleep(0.001)  # 1ms de sleep para no saturar CPU
-                
-                # Mostrar frame en posición (0,0) sin salto de línea
-                print(f"{escape_home}{frame}", end='', flush=True)
-                
-                # Avanzar tiempo acumulado
-                t += duration
-                
+                    time.sleep(0.001)
+                sys.stdout.write(escape_home + frame)
+                sys.stdout.flush()
+                elapsed += duration
     except KeyboardInterrupt:
-        # Manejo de Ctrl+C: restaurar terminal y mostrar mensaje
-        print("\033[?25h", end='')  # Mostrar cursor
-        print("\033[0m", end='')    # Resetear colores
-        print("\n\033[91mAnimación detenida\033[0m")
-        
+        sys.stdout.write("\033[?25h\033[0m\n")
+        sys.stdout.flush()
     finally:
-        # Limpieza final garantizada: cursor visible, colores reseteados, pantalla limpia
-        print("\033[?25h\033[0m\033[2J\033[H", end='')
+        sys.stdout.write("\033[?25h\033[0m\033[2J\033[H")
+        sys.stdout.flush()
+
+
 
 def image_to_ascii(image_path, remove_bg=False):
     """
@@ -400,6 +328,18 @@ def image_to_ascii(image_path, remove_bg=False):
         
         # Mostrar resultado en terminal
         print(ascii_art)
+
+def redraw(CURRENT_MODE, CURRENT_FILE, CURRENT_REMOVE_BG):
+    if CURRENT_MODE == "image":
+        image_to_ascii(CURRENT_FILE, removebg=CURRENT_REMOVE_BG)
+    elif CURRENT_MODE == "gif":
+        frames = gif_to_ascii_frames(CURRENT_FILE, remove_bg=CURRENT_REMOVE_BG)
+        play_ascii_animation(frames)
+
+    Modo = CURRENT_MODE
+    Archivo = CURRENT_FILE
+    Bg = CURRENT_REMOVE_BG
+
 
 def find_file_by_mode(mode):
     """
