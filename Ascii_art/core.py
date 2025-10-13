@@ -3,7 +3,7 @@ import time
 import shutil
 import sys
 import glob
-from PIL import Image, ImageSequence
+from PIL import Image
 
 ASCII_CHARS = " .'`^\",:;Il!i><~+_-?][}{1234567890)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
 FRAME_DELAY = 0.06
@@ -96,7 +96,7 @@ def play_ascii_animation(frames):
         os.system('cls' if os.name == 'nt' else 'clear')
         if not frames:
             return
-        escape_home = f"\033[0;0H"
+        escape_home = "\033[0;0H"
         start_time = time.perf_counter()
         t = 0
         while True:
