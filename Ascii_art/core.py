@@ -53,7 +53,11 @@ ASCII_CHARS = {
     "extended": " .`'^\",:;Il!i><~+_-?][}{1)"
     "(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$",  # ~70 caracteres
     "ultraextended": "  `^'.,:;Il!i~+-_?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$@",
-    "blocks": " ░▒▓█",  # Caracteres de bloques Unicode
+    "gradient": " ░▒▓█",  # Caracteres de bloques Unicode
+    "blocks": " ▁▂▃▄▅▆▇█",
+    "shades": " `^\",:;Il!i~+-_?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZ",
+    "symbols": "@&#%$XO\\/|(){}[]?-+~<>",
+    "mono_simple": " .:oO8@"
 }
 
 

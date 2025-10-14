@@ -20,7 +20,7 @@ def main():
     parser.add_argument("--remove-bg", action="store_true", help="Eliminar fondo")
     parser.add_argument(
         "--style",
-        choices=["simple", "extended", "ultraextended", "blocks"],
+        choices=["simple", "extended", "ultraextended", "gradient", "blocks", "shades", "symbols", "mono_simple" ],
         default="simple",
         help="Estilo de arte ASCII",
     )
