@@ -6,6 +6,8 @@ from core import (
     find_file_by_mode,
     setup_resize_handler,
     redraw,
+    animate_gif_with_resize,
+    image_to_ascii,
 )
 
 
@@ -34,6 +36,11 @@ def main():
     set_style(CURRENT_STYLE)
     setup_resize_handler()
     redraw(CURRENT_MODE, CURRENT_FILE, CURRENT_REMOVE_BG)
+
+    if CURRENT_MODE == "gif":
+        animate_gif_with_resize(CURRENT_FILE, remove_bg=CURRENT_REMOVE_BG)
+    else:
+        image_to_ascii(CURRENT_FILE, removebg=CURRENT_REMOVE_BG)
 
     try:
         while True:

@@ -15,7 +15,6 @@ Autor: [WetZap]
 Versión: 1.0
 Fecha: Octubre 2025
 """
-
 import os
 import time
 import shutil
@@ -44,7 +43,7 @@ Modo = ''
 Archivo = ''
 Bg = ''
 
-
+resize_event = threading.Event()
 
 # Estilo ASCII actual por defecto
 
@@ -57,7 +56,6 @@ ASCII_CHARS = {
     "blocks": " ░▒▓█",  # Caracteres de bloques Unicode
 }
 
-# Variables globales para estado actual
 
 # Gestión del tamaño de la terminal
 current_terminal_size = shutil.get_terminal_size()
@@ -72,7 +70,7 @@ def handle_resize_unix(signum, frame):
     new_size = get_terminal_size()
     if new_size != current_terminal_size:
         current_terminal_size = new_size
-        redraw(Modo, Archivo, Bg)
+        resize_event.set()  # Dispara el evento para avisar cambio
 
 def polling_windows(interval=0.5):
     global current_terminal_size
@@ -80,8 +78,9 @@ def polling_windows(interval=0.5):
         new_size = get_terminal_size()
         if new_size != current_terminal_size:
             current_terminal_size = new_size
-            redraw(Modo, Archivo, Bg)
+            resize_event.set()
         time.sleep(interval)
+
 
 def setup_resize_handler():
     if platform.system() in ['Linux', 'Darwin']:
@@ -264,14 +263,15 @@ def gif_to_ascii_frames(gif_path, remove_bg=False):
 
 
 def play_ascii_animation(frames):
+    import sys
+    import time
 
-    print("POLLA")
     try:
         sys.stdout.write("\033[?25l")
         sys.stdout.flush()
 
         if not frames:
-            print("No hay frames para mostrar")
+            print("No frames para mostrar")
             return
 
         escape_home = "\033[0;0H"
@@ -280,13 +280,18 @@ def play_ascii_animation(frames):
 
         while True:
             for idx, (frame, duration) in enumerate(frames):
-                print(f"Mostrando frame {idx+1}/{len(frames)}", end='\r')
+
+                if resize_event.is_set():
+                    resize_event.clear()
+                    return  # Sal del loop para regenerar los frames
+
                 target_time = start_time + elapsed
                 while time.perf_counter() < target_time:
                     time.sleep(0.001)
                 sys.stdout.write(escape_home + frame)
                 sys.stdout.flush()
                 elapsed += duration
+
     except KeyboardInterrupt:
         sys.stdout.write("\033[?25h\033[0m\n")
         sys.stdout.flush()
@@ -294,6 +299,10 @@ def play_ascii_animation(frames):
         sys.stdout.write("\033[?25h\033[0m\033[2J\033[H")
         sys.stdout.flush()
 
+def animate_gif_with_resize(file_path, remove_bg=False):
+    while True:
+        frames = gif_to_ascii_frames(file_path, remove_bg=remove_bg)
+        play_ascii_animation(frames)
 
 
 def image_to_ascii(image_path, remove_bg=False):
@@ -329,16 +338,17 @@ def image_to_ascii(image_path, remove_bg=False):
         # Mostrar resultado en terminal
         print(ascii_art)
 
-def redraw(CURRENT_MODE, CURRENT_FILE, CURRENT_REMOVE_BG):
-    if CURRENT_MODE == "image":
-        image_to_ascii(CURRENT_FILE, removebg=CURRENT_REMOVE_BG)
-    elif CURRENT_MODE == "gif":
-        frames = gif_to_ascii_frames(CURRENT_FILE, remove_bg=CURRENT_REMOVE_BG)
+def redraw(mode, file_path, remove_bg=False):
+    if mode == "gif":
+        frames = gif_to_ascii_frames(file_path, remove_bg=remove_bg)  # Devuelve lista frames ASCII
         play_ascii_animation(frames)
+    elif mode == "image":
+        image_to_ascii(file_path, remove_bg=remove_bg)
 
-    Modo = CURRENT_MODE
-    Archivo = CURRENT_FILE
-    Bg = CURRENT_REMOVE_BG
+
+    Modo = mode
+    Archivo = file_path
+    Bg = remove_bg
 
 
 def find_file_by_mode(mode):
