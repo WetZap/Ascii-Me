@@ -96,12 +96,12 @@ Aquí un ejemplo de cómo se ve una **imagen convertida en ASCII dentro del term
 
 *(Ejemplo simplificado de salida real — cada terminal puede variar en colores y densidad)*
 
-La imagen correspondiente sería: 
+La imagen correspondiente sería econtrada en: [Enlace](https://es.pinterest.com/pin/732820170656133937)
+ 
 <div>
-<img source = 'https://i.pinimg.com/736x/ef/f4/63/eff4638c5f39de96f910362ebfa7f087.jpg' alt="charmander" >
+<img source = 'https://i.pinimg.com/736x/ef/f4/63/eff4638c5f39de96f910362ebfa7f087.jpg'>
 
   
-Encontrado en: [Enlace](https://es.pinterest.com/pin/732820170656133937)
 </div>
 ---
 
