@@ -98,7 +98,8 @@ Aquí un ejemplo de cómo se ve una **imagen convertida en ASCII dentro del term
 
 La imagen correspondiente sería econtrada en: [Enlace](https://es.pinterest.com/pin/732820170656133937)
  
-<img source = 'https://i.pinimg.com/736x/ef/f4/63/eff4638c5f39de96f910362ebfa7f087.jpg'>
+<img src = 'https://i.pinimg.com/736x/ef/f4/63/eff4638c5f39de96f910362ebfa7f087.jpg' alt = "Charmander">
+
 ---
 
 ## 🛠 Desarrollo
