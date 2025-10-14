@@ -40,7 +40,7 @@ def main():
     if CURRENT_MODE == "gif":
         animate_gif_with_resize(CURRENT_FILE, remove_bg=CURRENT_REMOVE_BG)
     else:
-        image_to_ascii(CURRENT_FILE, removebg=CURRENT_REMOVE_BG)
+        image_to_ascii(CURRENT_FILE, remove_bg=CURRENT_REMOVE_BG)
 
     try:
         while True:
