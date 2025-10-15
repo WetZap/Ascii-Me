@@ -15,7 +15,6 @@ Autor: [WetZap]
 Versión: 1.0
 Fecha: Octubre 2025
 """
-import os
 import time
 import shutil
 import sys
@@ -350,9 +349,6 @@ def redraw(mode, file_path, remove_bg=False):
         image_to_ascii(file_path, remove_bg=remove_bg)
 
 
-    Modo = mode
-    Archivo = file_path
-    Bg = remove_bg
 
 
 def find_file_by_mode(mode):
